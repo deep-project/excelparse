@@ -90,13 +90,12 @@ func (s *Sheet) parseContentRows() (err error) {
 		return
 	}
 
-	var i = 0
+	var rowLineNumber = 0
 	for rows.Next() {
-		i++
-
+		rowLineNumber++
 		// hook
 		if s.Options.ParseContentRowsLoopStartHook != nil {
-			continueFlag, breakFlag, err := s.Options.ParseContentRowsLoopStartHook(s, i)
+			continueFlag, breakFlag, err := s.Options.ParseContentRowsLoopStartHook(s, rowLineNumber)
 			if err != nil {
 				return err
 			}
@@ -117,7 +116,7 @@ func (s *Sheet) parseContentRows() (err error) {
 		}
 
 		// 跳过非数据行
-		if i < s.ContentBeginRowNumber {
+		if rowLineNumber < s.ContentBeginRowNumber {
 			continue
 		}
 
@@ -128,11 +127,32 @@ func (s *Sheet) parseContentRows() (err error) {
 
 		// 解析行内容
 		for i, v := range cols {
+
+			colLineNumber := i + 1
+
 			rowData := &TableRowData{
 				ColumnIndex: i,
 				HeaderName:  s.getHeaderNameByIndex(i),
 				Value:       v,
 			}
+
+			// 获取单元格类型
+			//
+			if s.Options.GetCellType {
+				cell, err := excelize.CoordinatesToCellName(colLineNumber, rowLineNumber)
+				if err == nil {
+					rowData.CellType, _ = s.ExcelFile.GetCellType(s.Name, cell)
+				}
+			}
+
+			// 获取图片
+			if s.Options.GetCellPictures {
+				cell, err := excelize.CoordinatesToCellName(colLineNumber, rowLineNumber)
+				if err == nil {
+					rowData.CellPictures, _ = s.ExcelFile.GetPictures(s.Name, cell)
+				}
+			}
+
 			// 加入map
 			if rowData.HeaderName != "" {
 				row.Map[rowData.HeaderName] = rowData
@@ -143,7 +163,7 @@ func (s *Sheet) parseContentRows() (err error) {
 
 		// hook
 		if s.Options.ParseContentRowsLoopAppendBeforeHook != nil {
-			continueFlag, breakFlag, err := s.Options.ParseContentRowsLoopAppendBeforeHook(s, i, &row)
+			continueFlag, breakFlag, err := s.Options.ParseContentRowsLoopAppendBeforeHook(s, rowLineNumber, &row)
 			if err != nil {
 				return err
 			}

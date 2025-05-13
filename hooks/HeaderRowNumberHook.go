@@ -16,7 +16,7 @@ func HeaderRowNumberHookByNumber(n int) excelparse.HeaderRowNumberHookType {
 }
 
 // 通过关键词定位所在行(只要包含一个就可以)
-func HeaderRowNumberHookByAnyKeys(keys []string, findMax int) excelparse.HeaderRowNumberHookType {
+func HeaderRowNumberHookByAnyKeys(keys []string, maxFindLine int) excelparse.HeaderRowNumberHookType {
 	return func(sheet *excelparse.Sheet) (_ int, err error) {
 		if len(keys) == 0 {
 			return 0, errors.New("keys is empty")
@@ -25,13 +25,13 @@ func HeaderRowNumberHookByAnyKeys(keys []string, findMax int) excelparse.HeaderR
 		if err != nil {
 			return
 		}
-		if findMax <= 0 {
-			findMax = 999
+		if maxFindLine <= 0 {
+			maxFindLine = 999
 		}
 		n := 0
 		for rows.Next() {
 			n++
-			if n > findMax {
+			if n > maxFindLine {
 				break
 			}
 			row, err := rows.Columns()

@@ -1,48 +1,63 @@
 package excelparse
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/xuri/excelize/v2"
 )
 
 type Excelparse struct {
+	Sheets    []Sheet
 	options   *Options
 	excelFile *excelize.File
-	sheets    []Sheet
 }
 
 func New(opt *Options) *Excelparse {
 	return &Excelparse{options: opt}
 }
 
-func (w *Excelparse) Run() (err error) {
-	excelFile, err := excelize.OpenFile(w.options.Filepath, w.options.ExcelizeOptions)
+func (e *Excelparse) Run() (err error) {
+	if e.options.Filepath == "" {
+		return errors.New("file path not defined")
+	}
+	excelFile, err := excelize.OpenFile(e.options.Filepath, e.options.ExcelizeOptions)
 	if err != nil {
 		return
 	}
 	defer excelFile.Close()
-	w.excelFile = excelFile
-	if err = w.parseSheets(); err != nil {
+	e.excelFile = excelFile
+	if err = e.parseSheets(); err != nil {
 		return
 	}
 	return
 }
 
-func (w *Excelparse) parseSheets() (err error) {
-	for _, name := range w.excelFile.GetSheetList() {
-		if err = w.parseSheet(name); err != nil {
-			return fmt.Errorf("failed to parse sheet \"%s\". %s", name, err.Error())
+func (e *Excelparse) parseSheets() (err error) {
+	for i, name := range e.excelFile.GetSheetList() {
+
+		// hook
+		if e.options.ParseSheetsLoopStartHook != nil {
+			continueFlag, breakFlag, err := e.options.ParseSheetsLoopStartHook(e, i, name)
+			if err != nil {
+				return err
+			}
+			if breakFlag {
+				break
+			}
+			if continueFlag {
+				continue
+			}
 		}
-		if w.options.OnlyParseFirstSheet {
-			break
+		if err = e.parseSheet(name); err != nil {
+			return fmt.Errorf("failed to parse sheet \"%s\". %s", name, err.Error())
 		}
 	}
 	return
 }
 
-func (w *Excelparse) parseSheet(name string) (err error) {
-	sheet, err := newSheet(w.options, w.excelFile, name)
-	w.sheets = append(w.sheets, *sheet)
+func (e *Excelparse) parseSheet(name string) (err error) {
+	sheet, err := newSheet(e.options, e.excelFile, name)
+	e.Sheets = append(e.Sheets, *sheet)
 	return
 }
