@@ -18,6 +18,15 @@ func (t *TableRow) Get(columnName string) (res *TableRowData, exist bool) {
 	return
 }
 
+// 通过列表安全的获取单元格数据
+func (t *TableRow) SafeGet(columnName string) *TableRowData {
+	res, exist := t.Map[columnName]
+	if !exist || res == nil {
+		return &TableRowData{ColumnIndex: -1}
+	}
+	return res
+}
+
 type TableRowData struct {
 	ColumnIndex  int                // 列索引
 	HeaderName   string             // 表头名称
