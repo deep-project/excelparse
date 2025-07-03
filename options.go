@@ -8,6 +8,7 @@ type Options struct {
 	IgnoreContentRowError bool             // 忽略内容行解析错误
 	GetCellPictures       bool             // 获取单元格图片
 	GetCellType           bool             // 获取单元格类型
+	MustExtractLast       bool             // 必须提取最后一个，如果多列名重复，设置后无论最后一个是否为空都必须提取最后一个
 
 	ParseSheetsLoopStartHook             ParseSheetsLoopStartHookType             // 解析sheets循环开始hook
 	HeaderRowNumberHook                  HeaderRowNumberHookType                  // 定位表头所在行hook

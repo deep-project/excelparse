@@ -155,7 +155,23 @@ func (s *Sheet) parseContentRows() (err error) {
 
 			// 加入map
 			if rowData.HeaderName != "" {
-				row.Map[rowData.HeaderName] = rowData
+
+				if s.Options.MustExtractLast {
+					row.Map[rowData.HeaderName] = rowData
+				} else {
+					// 这里增加一个判断，当多列名重复时
+					// 如果已经存在值，判断要赋予的值是否为空，为空则不赋予
+					// 这样可以保证解析的数据不为空
+					_, ok := row.Map[rowData.HeaderName]
+					if ok {
+						if v != "" {
+							row.Map[rowData.HeaderName] = rowData
+						}
+					} else {
+						row.Map[rowData.HeaderName] = rowData
+					}
+				}
+
 			}
 			// 加入list
 			row.List = append(row.List, rowData)
