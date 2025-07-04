@@ -125,6 +125,12 @@ func (s *Sheet) parseContentRows() (err error) {
 			List: []*TableRowData{},
 		}
 
+		// 补齐列数
+		diff := len(s.HeaderNames) - len(cols)
+		if diff > 0 {
+			cols = append(cols, make([]string, diff)...) // 补 diff 个空字符串
+		}
+
 		// 解析行内容
 		for i, v := range cols {
 
